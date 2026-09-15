@@ -225,7 +225,7 @@ export function isTurnStatus(value: unknown): value is TurnStatus {
 // ============================================================================
 
 export const SESSION_TOOL_PROFILES = [
-  'headless-coding-v1',
+  'headless-coding-v2',
   'workhub-coordination-v1',
   'workhub-coordination-v2',
 ] as const;

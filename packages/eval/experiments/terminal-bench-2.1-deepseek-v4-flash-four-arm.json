@@ -83,7 +83,7 @@
         "collaborationMode": "agent",
         "orchestrationMode": "default",
         "hostSettlementTimeoutMs": 120000,
-        "toolProfile": "headless-coding-v1"
+        "toolProfile": "headless-coding-v2"
       }
     },
     {

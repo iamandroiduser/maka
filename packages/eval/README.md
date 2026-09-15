@@ -186,11 +186,13 @@ two must not be able to say different things.
 
 A subject that exhausts the framework timeout is reported as `subject_failed` with its verifier reward intact. The reward is the outcome; the status records that the run was cut off rather than finishing on its own. Only a missing reward is an infrastructure failure.
 
-Maka benchmark subjects freeze a versioned Session profile. `headless-coding-v1` is persisted in
+Maka benchmark subjects freeze a versioned Session profile. `headless-coding-v2` is persisted in
 the Session header, so later turns and backend rebuilds retain the same contract. It fixes the
 system prompt, disables product identity/personalization/skills/workspace-memory prompt fragments,
-admits only `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, and `apply_patch` as tool candidates,
-and exposes a foreground-only Bash schema without `run_in_background` or `pty`. Provider-specific
+and admits only `Bash`, `StopBackgroundTask`, `WriteStdin`, `Read`, `Write`, `Edit`, `Glob`,
+`Grep`, and `apply_patch` as tool candidates. Bash is the product tool unchanged: its schema and
+description come from the same builder the interactive product uses, so the foreground timeout,
+its ceiling, and the background/PTY contract are stated to the model once, in one place. Provider-specific
 routing remains authoritative: DeepSeek Responses exposes `apply_patch` instead of `Write` and
 `Edit`, and `Read` also accepts Session-scoped Maka tool-result paths. A real
 `hosted.execution.start` regression test pins SHA-256 hashes for the first main provider request's

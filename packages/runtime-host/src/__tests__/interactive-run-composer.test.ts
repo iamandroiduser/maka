@@ -116,7 +116,8 @@ test('scoped Tool resolution receives the complete stable Host binding', () => {
 
 test('an explicit tool profile remains an exact ceiling over scoped Tool additions', () => {
   const composer = createFixtureComposer({
-    toolProfile: 'headless-coding-v1',
+    builtinTools: unusedManagedShellBuiltinTools(),
+    toolProfile: 'headless-coding-v2',
     resolveAdditionalTools: () => [tool('Read'), tool('plugin_only')],
   });
 
@@ -255,6 +256,17 @@ test('WorkHub v2 binds control, tasks, attachment reading and user questions whi
     /Hosted tool profile is unavailable/,
   );
 });
+
+function unusedManagedShellBuiltinTools(): Parameters<
+  typeof createInteractiveRunComposer
+>[0]['builtinTools'] {
+  const unused = () => Promise.reject(new Error('not used'));
+  return {
+    shellRuns: { runForegroundBash: unused, runBackgroundBash: unused },
+    backgroundTasks: { stopBackgroundTask: unused },
+    ptyControls: { writeStdin: unused },
+  };
+}
 
 function createFixtureComposer(
   overrides: Partial<Parameters<typeof createInteractiveRunComposer>[0]> = {},

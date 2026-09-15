@@ -104,7 +104,7 @@
         "permissionMode": "bypass",
         "collaborationMode": "agent",
         "orchestrationMode": "default",
-        "toolProfile": "headless-coding-v1"
+        "toolProfile": "headless-coding-v2"
       }
     },
     {

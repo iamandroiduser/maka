@@ -155,7 +155,7 @@ function makaCell(): ExperimentCell {
         collaborationMode: 'agent',
         orchestrationMode: 'default',
         hostSettlementTimeoutMs: 120_000,
-        toolProfile: 'headless-coding-v1',
+        toolProfile: 'headless-coding-v2',
       },
     },
     task: { id: 'task', input: 'solve', config: {} },

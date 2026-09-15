@@ -4151,7 +4151,7 @@ function fullHeader(overrides: Partial<SessionHeader> = {}): SessionHeader {
     llmConnectionSlug: 'openai',
     connectionLocked: true,
     model: 'gpt-5',
-    toolProfile: 'headless-coding-v1',
+    toolProfile: 'headless-coding-v2',
     thinkingLevel: 'high',
     permissionMode: 'ask',
     collaborationMode: 'agent',

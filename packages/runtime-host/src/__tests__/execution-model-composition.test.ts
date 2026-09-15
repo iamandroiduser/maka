@@ -148,11 +148,10 @@ const MAX_IMPLEMENTATION_CHILD_PTY_READS = 5;
 const MIN_IMPLEMENTATION_CHILD_REQUESTS = 6;
 const MAX_IMPLEMENTATION_CHILD_REQUESTS =
   MIN_IMPLEMENTATION_CHILD_REQUESTS + MAX_IMPLEMENTATION_CHILD_PTY_READS - 1;
-const HEADLESS_CODING_V1_PROMPT_HASH =
+const HEADLESS_CODING_V2_PROMPT_HASH =
   'sha256:b2773282ac4755dc8d8a663eafdec68c3fa6f5680ec8557d261b5f723672b467';
-const HEADLESS_CODING_V1_TOOLS_HASH =
-  // Unified Read pages and Grep completeness share the hosted tool profile.
-  'sha256:fb7f539090471695ec1d8ca31555d083d8c3c0e0c40d5dcf655b14c103b10c22';
+const HEADLESS_CODING_V2_TOOLS_HASH =
+  'sha256:913e6f31d62da225cd7995a23f71cf031845167eeb64d181a9d07cfd87c0ac13';
 const execFileAsync = promisify(execFile);
 test('backend creation resolves a bound Session by immutable Connection identity', async () => {
   let observedRef: unknown;
@@ -2521,7 +2520,7 @@ test('hosted execution freezes the headless coding provider wire contract', asyn
           permissionMode: 'bypass',
           collaborationMode: 'agent',
           orchestrationMode: 'default',
-          toolProfile: 'headless-coding-v1',
+          toolProfile: 'headless-coding-v2',
         },
         content: { text: 'Complete the benchmark task.' },
         maxSteps: 100_000,
@@ -2541,24 +2540,28 @@ test('hosted execution freezes the headless coding provider wire contract', asyn
     assert.equal(typeof instructions, 'string', JSON.stringify(request?.body));
     assert.match(instructions ?? '', /^Active model: deepseek-v4-flash$/mu);
     assert.ok(Array.isArray(tools));
-    assert.equal(stableHash(instructions), HEADLESS_CODING_V1_PROMPT_HASH);
-    assert.equal(stableHash(tools), HEADLESS_CODING_V1_TOOLS_HASH);
+    assert.equal(stableHash(instructions), HEADLESS_CODING_V2_PROMPT_HASH);
+    assert.equal(stableHash(tools), HEADLESS_CODING_V2_TOOLS_HASH);
     assert.deepEqual(responsesToolNames(request?.body), [
       'Bash',
       'Edit',
       'Glob',
       'Grep',
       'Read',
+      'StopBackgroundTask',
       'Write',
+      'WriteStdin',
     ]);
     const bash = (tools as Array<Record<string, unknown>>).find((tool) => tool.name === 'Bash');
     assert.ok(bash);
-    assert.doesNotMatch(JSON.stringify(bash), /run_in_background|pty/u);
+    assert.match(JSON.stringify(bash), /run_in_background/u);
+    assert.match(JSON.stringify(bash), /"pty"/u);
+    assert.match(JSON.stringify(bash), /timeout 120000ms, maximum 600000ms/u);
 
     const stores = await openInteractiveExecutionStoresForWrite(owner.lease);
     assert.equal(
       (await stores.sessionStore.readHeaderSnapshot(executionId)).toolProfile,
-      'headless-coding-v1',
+      'headless-coding-v2',
     );
     const secondTurnId = '00000000-0000-4000-8000-000000000778';
     const secondStarted = await startTurn(
@@ -2583,9 +2586,9 @@ test('hosted execution freezes the headless coding provider wire contract', asyn
     for (const profiled of profiledRequests) {
       assert.equal(
         stableHash(responsesDeveloperPrompt(profiled.body)),
-        HEADLESS_CODING_V1_PROMPT_HASH,
+        HEADLESS_CODING_V2_PROMPT_HASH,
       );
-      assert.equal(stableHash(profiled.body.tools), HEADLESS_CODING_V1_TOOLS_HASH);
+      assert.equal(stableHash(profiled.body.tools), HEADLESS_CODING_V2_TOOLS_HASH);
     }
   } finally {
     try {
@@ -4739,8 +4742,15 @@ test('the headless coding profile freezes the Eval prompt and tool ceiling', asy
       },
     } as unknown as HostMemoryCoordinator,
     sessionTodo: {} as SessionTodoToolStore,
-    builtinTools: {},
-    toolProfile: 'headless-coding-v1',
+    builtinTools: {
+      shellRuns: {
+        runForegroundBash: () => Promise.reject(new Error('not used')),
+        runBackgroundBash: () => Promise.reject(new Error('not used')),
+      },
+      backgroundTasks: { stopBackgroundTask: () => Promise.reject(new Error('not used')) },
+      ptyControls: { writeStdin: () => Promise.reject(new Error('not used')) },
+    },
+    toolProfile: 'headless-coding-v2',
     parentAgentTools: buildParentAgentTools(),
     scheduledTaskTool: {
       name: 'ScheduledTask',
@@ -4752,7 +4762,17 @@ test('the headless coding profile freezes the Eval prompt and tool ceiling', asy
 
   assert.deepEqual(
     composition.tools.map(({ name }) => name),
-    ['Bash', 'Read', 'Write', 'Edit', 'Glob', 'Grep', 'apply_patch'],
+    [
+      'Bash',
+      'StopBackgroundTask',
+      'WriteStdin',
+      'Read',
+      'Write',
+      'Edit',
+      'Glob',
+      'Grep',
+      'apply_patch',
+    ],
   );
   assert.equal(composition.toolAvailability, undefined);
   assert.equal(
