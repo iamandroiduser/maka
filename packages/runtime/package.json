@@ -180,10 +180,10 @@
     "socks": "^2.8.9",
     "socks-proxy-agent": "^10.1.0",
     "turndown": "^7.2.4",
-    "undici": "^8.10.1",
+    "undici": "^8.12.2",
     "ws": "^8.21.3",
     "yaml": "^2.9.0",
-    "zod": "^4.5.4"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@maka/storage": "0.1.0",
